@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "EmberPay",
+    "slug": "emberpay",
+    "version": "1.0.0",
+    "scheme": "emberpay",
+    "orientation": "portrait",
+    "icon": "./src/assets/images/icon.png",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "splash": {
+      "image": "./src/assets/images/splash.png"
+    },
+    "android": {
+      "package": "io.github.sitiom.emberpay"
+    },
+    "experiments": {
+      "tsconfigPaths": true
+    },
+    "plugins": ["expo-router"]
+  }
+}
