@@ -4,8 +4,13 @@ import { Button, HelperText, Text, TextInput } from "react-native-paper";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  GoogleAuthProvider,
+  signInWithCredential,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import { useAuth } from "reactfire";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -18,6 +23,7 @@ export default function LoginScreen() {
   const {
     handleSubmit,
     control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(LoginSchema),
@@ -37,7 +43,13 @@ export default function LoginScreen() {
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 label="Email"
-                onBlur={onBlur}
+                onBlur={() => {
+                  if (value !== undefined) {
+                    setValue("email", value.trim());
+                  }
+                  onBlur();
+                }}
+                keyboardType="email-address"
                 onChangeText={onChange}
                 value={value}
                 error={errors.email && true}
@@ -99,8 +111,19 @@ export default function LoginScreen() {
             contentStyle={{ height: 55 }}
             loading={isSubmitting}
             disabled={isSubmitting}
-            onPress={() => {
-              ToastAndroid.show("Coming soon!", ToastAndroid.SHORT);
+            onPress={async () => {
+              try {
+                await GoogleSignin.hasPlayServices({
+                  showPlayServicesUpdateDialog: true,
+                });
+                const { idToken } = await GoogleSignin.signIn();
+                const googleCredential = GoogleAuthProvider.credential(idToken);
+                await signInWithCredential(auth, googleCredential);
+              } catch (e) {
+                if (e instanceof Error) {
+                  ToastAndroid.show(e.message, ToastAndroid.SHORT);
+                }
+              }
             }}
           >
             Log In with Google

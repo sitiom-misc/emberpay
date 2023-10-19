@@ -11,11 +11,19 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import urlToBlob from "@/lib/urlToBlob";
 
 const SignupSchema = z.object({
-  name: z.string().min(6),
+  name: z
+    .string()
+    .min(6)
+    .regex(/^[a-zA-Z\s.]+$/, {
+      message: "Must not contain special characters.",
+    }),
   email: z.string().email(),
   password: z
     .string()
     .min(8)
+    .regex(/^[^\s]+$/, {
+      message: "Must not contain whitespaces.",
+    })
     .regex(/^(?=.*[A-Z])(?=.*[0-9])/, {
       message: "Must contain at least 1 number and uppercase letter.",
     }),
@@ -28,6 +36,7 @@ export default function SignupScreen() {
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
+    setValue,
   } = useForm<SignupFormData>({
     resolver: zodResolver(SignupSchema),
   });
@@ -105,17 +114,23 @@ export default function SignupScreen() {
         <View>
           <Controller
             control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
+            render={({ field: { onChange, onBlur, value, disabled } }) => (
               <TextInput
                 label="Name"
-                onBlur={onBlur}
+                onBlur={() => {
+                  if (value !== undefined) {
+                    setValue("name", value.trim());
+                  }
+                  onBlur();
+                }}
                 onChangeText={onChange}
                 value={value}
                 error={errors.email && true}
-                disabled={isSubmitting}
+                disabled={disabled}
               />
             )}
             name="name"
+            disabled={isSubmitting}
           />
           {errors.name && (
             <HelperText type="error" visible={errors.name ? true : false}>
@@ -126,17 +141,24 @@ export default function SignupScreen() {
         <View>
           <Controller
             control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
+            render={({ field: { onChange, onBlur, value, disabled } }) => (
               <TextInput
                 label="Email"
-                onBlur={onBlur}
+                keyboardType="email-address"
+                onBlur={() => {
+                  if (value !== undefined) {
+                    setValue("email", value.trim());
+                  }
+                  onBlur();
+                }}
                 onChangeText={onChange}
                 value={value}
                 error={errors.email && true}
-                disabled={isSubmitting}
+                disabled={disabled}
               />
             )}
             name="email"
+            disabled={isSubmitting}
           />
           {errors.email && (
             <HelperText type="error" visible={errors.email ? true : false}>
@@ -147,7 +169,7 @@ export default function SignupScreen() {
         <View>
           <Controller
             control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
+            render={({ field: { onChange, onBlur, value, disabled } }) => (
               <TextInput
                 label="Password"
                 secureTextEntry={true}
@@ -155,10 +177,11 @@ export default function SignupScreen() {
                 onChangeText={onChange}
                 value={value}
                 error={errors.password && true}
-                disabled={isSubmitting}
+                disabled={disabled}
               />
             )}
             name="password"
+            disabled={isSubmitting}
           />
           {errors.password && (
             <HelperText type="error" visible={errors.password ? true : false}>

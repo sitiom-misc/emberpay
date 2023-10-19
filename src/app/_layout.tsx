@@ -7,11 +7,18 @@ import {
   useInitAuth,
 } from "reactfire";
 import { connectAuthEmulator, initializeAuth } from "firebase/auth";
-import { reactNativeLocalPersistence } from "firebase/auth/react-native";
+import { getReactNativePersistence } from "firebase/auth/react-native";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { Material3ThemeProvider } from "@/lib/Material3ThemeProvider";
 import { Stack } from "expo-router";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+GoogleSignin.configure({
+  webClientId:
+    "692675967448-mi9d4ejodgar25d6hed75582f7ddh8vd.apps.googleusercontent.com",
+});
 
 export const firebaseConfig = {
   apiKey: "AIzaSyDAd_anZDfjCFs5OVhWVgYDAbi2Hy1AJ2Y",
@@ -28,7 +35,7 @@ export function FirebaseProviders({ children }: { children: React.ReactNode }) {
   const storage = getStorage(app);
   const { status: authInitStatus, data: auth } = useInitAuth(async (app) =>
     initializeAuth(app, {
-      persistence: reactNativeLocalPersistence,
+      persistence: getReactNativePersistence(AsyncStorage),
     })
   );
 

@@ -15,11 +15,12 @@
       "image": "./src/assets/images/splash.png"
     },
     "android": {
-      "package": "io.github.sitiom.emberpay"
+      "package": "io.github.sitiom.emberpay",
+      "googleServicesFile": "./google-services.json"
     },
     "experiments": {
       "tsconfigPaths": true
     },
-    "plugins": ["expo-router"]
+    "plugins": ["expo-router", "@react-native-google-signin/google-signin"]
   }
 }
