@@ -1,5 +1,5 @@
 import MaterialTabBar from "@/components/material-tab-bar";
-import { Redirect, Tabs } from "expo-router";
+import { Link, Redirect, Tabs } from "expo-router";
 import { BottomTabHeaderProps } from "@react-navigation/bottom-tabs";
 import { ActivityIndicator, Appbar } from "react-native-paper";
 import { useSigninCheck } from "reactfire";
@@ -10,12 +10,14 @@ function Navbar({
   route,
   options,
   elevated,
-}: BottomTabHeaderProps & { elevated?: boolean }) {
+  children,
+}: BottomTabHeaderProps & { elevated?: boolean; children?: React.ReactNode }) {
   const title = getHeaderTitle(options, route.name);
 
   return (
     <Appbar.Header elevated={elevated}>
       <Appbar.Content title={title} />
+      {children}
     </Appbar.Header>
   );
 }
@@ -27,7 +29,11 @@ export default function HomeLayout() {
     return <ActivityIndicator />;
   }
 
-  return signInCheckResult.signedIn ? (
+  if (!signInCheckResult.signedIn) {
+    return <Redirect href="/login" />;
+  }
+
+  return (
     <Tabs
       screenOptions={{
         header: (props) => <Navbar {...props} elevated={true} />,
@@ -39,6 +45,13 @@ export default function HomeLayout() {
         options={{
           headerTitle: "Home",
           tabBarLabel: "Home",
+          header: (props) => (
+            <Navbar {...props}>
+              <Link href="/settings">
+                <Appbar.Action icon="account-circle-outline" />
+              </Link>
+            </Navbar>
+          ),
           tabBarIcon: ({ color, size, focused }) => {
             return (
               <Icon
@@ -67,7 +80,5 @@ export default function HomeLayout() {
         }}
       />
     </Tabs>
-  ) : (
-    <Redirect href="/login" />
   );
 }
