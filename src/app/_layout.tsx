@@ -1,7 +1,3 @@
-import { Material3ThemeProvider } from "@/lib/Material3ThemeProvider";
-import { Stack } from "expo-router";
-import { Appbar } from "react-native-paper";
-import { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import {
   AuthProvider,
   FirebaseAppProvider,
@@ -11,11 +7,20 @@ import {
   useInitAuth,
 } from "reactfire";
 import { connectAuthEmulator, initializeAuth } from "firebase/auth";
-import { reactNativeLocalPersistence } from "firebase/auth/react-native";
+import { getReactNativePersistence } from "firebase/auth/react-native";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
+import { Material3ThemeProvider } from "@/lib/Material3ThemeProvider";
+import { Stack } from "expo-router";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const firebaseConfig = {
+GoogleSignin.configure({
+  webClientId:
+    "692675967448-mi9d4ejodgar25d6hed75582f7ddh8vd.apps.googleusercontent.com",
+});
+
+export const firebaseConfig = {
   apiKey: "AIzaSyDAd_anZDfjCFs5OVhWVgYDAbi2Hy1AJ2Y",
   authDomain: "emberpay-iac.firebaseapp.com",
   projectId: "emberpay-iac",
@@ -24,22 +29,13 @@ const firebaseConfig = {
   appId: "1:692675967448:web:00d56d1233bafd64481aad",
 };
 
-function Navbar({ navigation, back }: NativeStackHeaderProps) {
-  return (
-    <Appbar.Header elevated={true}>
-      {back ? <Appbar.BackAction onPress={navigation.goBack} /> : null}
-      <Appbar.Content title="EmberPay" />
-    </Appbar.Header>
-  );
-}
-
-function FirebaseProviders({ children }: { children: React.ReactNode }) {
+export function FirebaseProviders({ children }: { children: React.ReactNode }) {
   const app = useFirebaseApp();
   const firestore = getFirestore(app);
   const storage = getStorage(app);
   const { status: authInitStatus, data: auth } = useInitAuth(async (app) =>
     initializeAuth(app, {
-      persistence: reactNativeLocalPersistence,
+      persistence: getReactNativePersistence(AsyncStorage),
     })
   );
 
@@ -69,7 +65,8 @@ export default function RootLayout() {
         <Material3ThemeProvider sourceColor="#fbc02d">
           <Stack
             screenOptions={{
-              header: (props) => <Navbar {...props} />,
+              headerShown: false,
+              animation: "fade_from_bottom",
             }}
           />
         </Material3ThemeProvider>

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "692675967448",
+    "project_id": "emberpay-iac",
+    "storage_bucket": "emberpay-iac.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:692675967448:android:f59865ec2f2d4c13481aad",
+        "android_client_info": {
+          "package_name": "io.github.sitiom.emberpay"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "692675967448-f2htrhcd8kpff2vhu7n2dfdoc94870or.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.github.sitiom.emberpay",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "692675967448-mi9d4ejodgar25d6hed75582f7ddh8vd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9ETjNduEY6WjMMgFBhtP2Kt22biYG2YQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "692675967448-mi9d4ejodgar25d6hed75582f7ddh8vd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
