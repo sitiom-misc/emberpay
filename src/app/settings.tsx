@@ -1,3 +1,4 @@
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { Redirect, router } from "expo-router";
 import { signOut } from "firebase/auth";
 import { View, StyleSheet, Image } from "react-native";
@@ -6,14 +7,13 @@ import { useAuth, useSigninCheck, useUser } from "reactfire";
 
 export default function HistoryScreen() {
   const { status: signInStatus, data: signInCheckResult } = useSigninCheck();
-  const { status: userStatus, data: user } = useUser();
   const auth = useAuth();
 
-  if (signInStatus === "loading" || userStatus === "loading") {
+  if (signInStatus === "loading") {
     return <ActivityIndicator />;
   }
 
-  if (!signInCheckResult.signedIn || !user) {
+  if (!signInCheckResult.signedIn || !auth.currentUser) {
     return <Redirect href="/login" />;
   }
 
@@ -22,21 +22,24 @@ export default function HistoryScreen() {
       <View style={styles.avatarContainer}>
         <Image
           source={
-            user.photoURL
-              ? { uri: user.photoURL }
+            auth.currentUser.photoURL
+              ? { uri: auth.currentUser.photoURL }
               : require("@/assets/images/avatar-3.png")
           }
           style={styles.avatarImage}
         />
         <View>
-          <Text variant="titleMedium">{user.displayName}</Text>
-          <Text>{user.email}</Text>
+          <Text variant="titleMedium">{auth.currentUser.displayName}</Text>
+          <Text>{auth.currentUser.email}</Text>
         </View>
       </View>
       <Divider style={{ marginVertical: 15 }} />
       <Drawer.Item
         icon="logout"
         onPress={async () => {
+          if (auth.currentUser?.providerData[0].providerId === "google.com") {
+            await GoogleSignin.signOut();
+          }
           await signOut(auth);
           router.back(); // To clear the stack history
         }}

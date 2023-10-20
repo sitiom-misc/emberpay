@@ -1,61 +1,121 @@
+import { User as FireStoreUser } from "@/types";
+import { User } from "firebase/auth";
+import { DocumentReference, doc } from "firebase/firestore";
 import { View, StyleSheet, Image, ToastAndroid } from "react-native";
 import { ActivityIndicator, Button, Surface, Text } from "react-native-paper";
-import { useUser } from "reactfire";
+import { useFirestore, useFirestoreDocData, useUser } from "reactfire";
+import QRCode from "react-native-qrcode-svg";
+import { useAppTheme } from "@/lib/Material3ThemeProvider";
+import { useState } from "react";
 
 export default function IndexScreen() {
   const { status: userStatus, data: user } = useUser();
+
+  if (userStatus === "loading" || !user) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+  return <Home user={user} />;
+}
+
+function Home({ user }: { user: User }) {
+  const firestore = useFirestore();
+  const theme = useAppTheme();
+  const userDocRef = doc(
+    firestore,
+    "users",
+    user.uid
+  ) as DocumentReference<FireStoreUser>;
+  const { status: userDocStatus, data: userData } =
+    useFirestoreDocData(userDocRef);
+  const [isReceiveVisible, setIsReceiveVisible] = useState(false);
+
+  if (userDocStatus === "loading" || !userData) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {userStatus === "loading" ? (
-        <ActivityIndicator />
+      <View style={styles.userContainer}>
+        <Image
+          source={
+            user.photoURL
+              ? { uri: user.photoURL }
+              : require("@/assets/images/avatar-3.png")
+          }
+          style={styles.avatarImage}
+        />
+        <Text variant="headlineSmall">
+          Welcome back, {user.displayName?.split(" ")[0]}!
+        </Text>
+      </View>
+      {!isReceiveVisible ? (
+        <Surface style={styles.walletCard}>
+          <View>
+            <Text variant="headlineLarge">
+              {userData.balance.toLocaleString("en-US", {
+                style: "currency",
+                currency: "PHP",
+              })}
+            </Text>
+            <Text variant="labelMedium">Wallet Balance</Text>
+          </View>
+          <View style={styles.walletCardActions}>
+            <Button
+              mode="contained-tonal"
+              style={{ flex: 1 }}
+              icon="qrcode"
+              contentStyle={{ height: 50 }}
+              onPress={() => {
+                setIsReceiveVisible(true);
+              }}
+            >
+              Receive
+            </Button>
+            <Button
+              mode="contained-tonal"
+              style={{ flex: 1 }}
+              icon="qrcode-scan"
+              contentStyle={{ height: 50 }}
+              onPress={() => {
+                ToastAndroid.show("Coming soon!", ToastAndroid.SHORT);
+              }}
+            >
+              Send
+            </Button>
+          </View>
+        </Surface>
       ) : (
-        user && (
-          <>
-            <View style={styles.userContainer}>
-              <Image
-                source={
-                  user.photoURL
-                    ? { uri: user.photoURL }
-                    : require("@/assets/images/avatar-3.png")
-                }
-                style={styles.avatarImage}
-              />
-              <Text variant="headlineSmall">
-                Welcome back, {user.displayName?.split(" ")[0]}!
-              </Text>
-            </View>
-            <Surface style={styles.walletCard}>
-              <View>
-                <Text variant="headlineLarge">₱2,168.00</Text>
-                <Text variant="labelMedium">Wallet Balance</Text>
-              </View>
-              <View style={styles.walletCardActions}>
-                <Button
-                  mode="contained-tonal"
-                  style={{ flex: 1 }}
-                  icon="qrcode"
-                  contentStyle={{ height: 50 }}
-                  onPress={() => {
-                    ToastAndroid.show("Coming soon!", ToastAndroid.SHORT);
-                  }}
-                >
-                  Receive
-                </Button>
-                <Button
-                  mode="contained-tonal"
-                  style={{ flex: 1 }}
-                  icon="qrcode-scan"
-                  contentStyle={{ height: 50 }}
-                  onPress={() => {
-                    ToastAndroid.show("Coming soon!", ToastAndroid.SHORT);
-                  }}
-                >
-                  Send
-                </Button>
-              </View>
-            </Surface>
-          </>
-        )
+        <Surface style={[styles.walletCard, { alignItems: "center" }]}>
+          <Text variant="titleLarge">Receive Money</Text>
+          <QRCode
+            value={`emberpay:${user.uid}`}
+            logo={require("@/assets/images/icon.png")}
+            backgroundColor="transparent"
+            color={theme.colors.inverseSurface}
+            size={180}
+          />
+          <View style={styles.walletCardActions}>
+            <Button
+              mode="contained-tonal"
+              style={{ flex: 1 }}
+              icon="eye"
+              contentStyle={{ height: 50 }}
+              onPress={() => {
+                setIsReceiveVisible(false);
+              }}
+            >
+              Hide
+            </Button>
+          </View>
+        </Surface>
       )}
     </View>
   );
@@ -70,7 +130,7 @@ const styles = StyleSheet.create({
   },
   userContainer: {
     alignItems: "center",
-    marginBottom: 50,
+    marginBottom: 25,
     gap: 10,
   },
   avatarImage: {
@@ -81,15 +141,14 @@ const styles = StyleSheet.create({
   walletCard: {
     width: "100%",
     paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingVertical: 20,
     borderRadius: 10,
-    gap: 10,
+    gap: 20,
   },
   walletCardActions: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 10,
     gap: 10,
   },
 });
