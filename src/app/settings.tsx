@@ -37,7 +37,10 @@ export default function HistoryScreen() {
       <Drawer.Item
         icon="logout"
         onPress={async () => {
-          if (auth.currentUser?.providerData[0].providerId === "google.com") {
+          if (
+            (await GoogleSignin.isSignedIn()) &&
+            auth.currentUser?.providerData[0].providerId === "google.com"
+          ) {
             await GoogleSignin.signOut();
           }
           await signOut(auth);
