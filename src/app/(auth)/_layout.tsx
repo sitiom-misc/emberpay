@@ -10,12 +10,20 @@ export default function AuthLayout() {
     return <ActivityIndicator />;
   }
 
-  return signInCheckResult.signedIn ? (
-    <Redirect href="/" />
-  ) : (
+  if (signInCheckResult.signedIn) {
+    return <Redirect href="/" />;
+  }
+
+  return (
     <Stack
       screenOptions={{
-        header: (props) => <MaterialNavBar {...props} title="" />,
+        header: (props) => (
+          <MaterialNavBar
+            {...props}
+            style={{ backgroundColor: "transparent" }}
+          />
+        ),
+        headerTitle: "",
         animation: "slide_from_bottom",
       }}
     />

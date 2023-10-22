@@ -6,7 +6,7 @@ import {
   useFirebaseApp,
   useInitAuth,
 } from "reactfire";
-import { connectAuthEmulator, initializeAuth } from "firebase/auth";
+import { connectAuthEmulator, getAuth, initializeAuth } from "firebase/auth";
 import { getReactNativePersistence } from "firebase/auth/react-native";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
@@ -14,6 +14,8 @@ import { Material3ThemeProvider } from "@/lib/Material3ThemeProvider";
 import { Stack } from "expo-router";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import MaterialNavBar from "@/components/material-nav-bar";
+import { FirebaseError } from "firebase/app";
 
 GoogleSignin.configure({
   webClientId:
@@ -33,20 +35,37 @@ export function FirebaseProviders({ children }: { children: React.ReactNode }) {
   const app = useFirebaseApp();
   const firestore = getFirestore(app);
   const storage = getStorage(app);
-  const { status: authInitStatus, data: auth } = useInitAuth(async (app) =>
-    initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage),
-    })
-  );
+  const { status: authInitStatus, data: auth } = useInitAuth(async (app) => {
+    try {
+      return initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage),
+      });
+    } catch {
+      // Already initialized
+      return getAuth(app);
+    }
+  });
 
   if (authInitStatus === "loading") {
     return null;
   }
 
   if (__DEV__) {
-    connectFirestoreEmulator(firestore, "localhost", 8080);
-    connectAuthEmulator(auth, "http://localhost:9099");
-    connectStorageEmulator(storage, "localhost", 9199);
+    try {
+      connectFirestoreEmulator(firestore, "localhost", 8080);
+      connectStorageEmulator(storage, "localhost", 9199);
+      // https://github.com/firebase/firebase-js-sdk/issues/6824
+      // @ts-ignore
+      if (!auth.config.emulator) {
+        connectAuthEmulator(auth, "http://localhost:9099");
+      }
+    } catch (e) {
+      if (e instanceof FirebaseError && e.code === "failed-precondition") {
+        // Suppress error
+      } else {
+        throw e;
+      }
+    }
   }
 
   return (
@@ -65,10 +84,29 @@ export default function RootLayout() {
         <Material3ThemeProvider sourceColor="#fbc02d">
           <Stack
             screenOptions={{
+              header: (props) => <MaterialNavBar {...props} />,
               headerShown: false,
               animation: "fade_from_bottom",
             }}
-          />
+          >
+            <Stack.Screen
+              name="settings"
+              options={{
+                headerTitle: "Settings",
+                headerShown: true,
+              }}
+            />
+            <Stack.Screen
+              name="scan"
+              options={{
+                headerTitle: "Scan QR",
+                headerShown: true,
+                header: (props) => (
+                  <MaterialNavBar {...props} elevated={true} />
+                ),
+              }}
+            />
+          </Stack>
         </Material3ThemeProvider>
       </FirebaseProviders>
     </FirebaseAppProvider>
