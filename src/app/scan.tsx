@@ -16,7 +16,7 @@ import {
   TextInput,
 } from "react-native-paper";
 import { BarCodeScanner } from "expo-barcode-scanner";
-import { useAuth, useFirestore } from "reactfire";
+import { useAuth, useFirestore, useFirestoreDocData } from "reactfire";
 import {
   CollectionReference,
   DocumentReference,
@@ -33,33 +33,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { runTransaction } from "firebase/firestore";
 import { router } from "expo-router";
 
-const AmountSchema = z.object({
-  amount: z.coerce
-    .number({ invalid_type_error: "Must be a valid number." })
-    .positive()
-    .multipleOf(0.01, {
-      message: "Number must only have a maximum of 2 decimal places.",
-    }),
-});
-
-type AmountFormData = z.infer<typeof AmountSchema>;
-
-export default function ScanScreen() {
-  const {
-    handleSubmit,
-    control,
-    formState: { errors, isSubmitting },
-    reset,
-  } = useForm<AmountFormData>({
-    resolver: zodResolver(AmountSchema),
-  });
-
+function Screen({ currentUser }: { currentUser: User }) {
+  const firestore = useFirestore();
+  const { width, height } = useWindowDimensions();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
-  const { width, height } = useWindowDimensions();
   const [receiver, setReceiver] = useState<DocumentSnapshot<User> | null>(null);
-  const firestore = useFirestore();
-  const auth = useAuth();
+
+  const senderDocRef = doc(
+    firestore,
+    "users",
+    currentUser.id!
+  ) as DocumentReference<User>;
 
   useEffect(() => {
     const getBarCodeScannerPermissions = async () => {
@@ -70,9 +55,34 @@ export default function ScanScreen() {
     getBarCodeScannerPermissions();
   }, []);
 
-  if (auth.currentUser === null) return null;
+  const AmountSchema = z.object({
+    amount: z.coerce
+      .number({ invalid_type_error: "Must be a valid number." })
+      .positive()
+      .max(currentUser.balance, {
+        message: `Amount must not exceed your current balance (${currentUser.balance.toLocaleString(
+          "en-PH",
+          {
+            style: "currency",
+            currency: "PHP",
+          }
+        )}).`,
+      })
+      .multipleOf(0.01, {
+        message: "Number must only have a maximum of 2 decimal places.",
+      }),
+  });
 
-  const currentUser = auth.currentUser; // To make TS stop complaining about currentUser being null
+  type AmountFormData = z.infer<typeof AmountSchema>;
+
+  const {
+    handleSubmit,
+    control,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<AmountFormData>({
+    resolver: zodResolver(AmountSchema),
+  });
 
   if (hasPermission === null) {
     return (
@@ -147,11 +157,6 @@ export default function ScanScreen() {
               onPress={handleSubmit(async ({ amount }) => {
                 if (receiver === null) return;
 
-                const senderDocRef = doc(
-                  firestore,
-                  "users",
-                  currentUser.uid
-                ) as DocumentReference<User>;
                 const receiverDocRef = doc(
                   firestore,
                   "users",
@@ -183,7 +188,7 @@ export default function ScanScreen() {
                     transaction.set(transactionRef, {
                       amount,
                       date: serverTimestamp(),
-                      senderId: currentUser.uid,
+                      senderId: currentUser.id!,
                       receiverId: receiver.id,
                     });
                   });
@@ -218,7 +223,7 @@ export default function ScanScreen() {
             const receiverDoc = await getDoc(
               doc(firestore, "users", receiverId) as DocumentReference<User>
             );
-            if (receiverDoc.id === currentUser.uid) {
+            if (receiverDoc.id === currentUser.id) {
               ToastAndroid.show(
                 "You can't send money to yourself!",
                 ToastAndroid.SHORT
@@ -243,6 +248,30 @@ export default function ScanScreen() {
       )}
     </View>
   );
+}
+
+export default function ScanScreen() {
+  const firestore = useFirestore();
+  const auth = useAuth();
+
+  if (auth.currentUser === null) return null;
+
+  const { status, data: currentUserData } = useFirestoreDocData(
+    doc(firestore, "users", auth.currentUser.uid) as DocumentReference<User>,
+    {
+      idField: "id",
+    }
+  );
+
+  if (status === "loading") {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  return <Screen currentUser={currentUserData} />;
 }
 
 const styles = StyleSheet.create({
