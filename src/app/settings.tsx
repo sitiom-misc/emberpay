@@ -3,7 +3,7 @@ import { Redirect, router } from "expo-router";
 import { signOut } from "firebase/auth";
 import { View, StyleSheet, Image } from "react-native";
 import { ActivityIndicator, Text, Divider, Drawer } from "react-native-paper";
-import { useAuth, useSigninCheck, useUser } from "reactfire";
+import { useAuth, useSigninCheck } from "reactfire";
 
 export default function HistoryScreen() {
   const { status: signInStatus, data: signInCheckResult } = useSigninCheck();

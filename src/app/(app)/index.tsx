@@ -1,12 +1,13 @@
 import { User as FireStoreUser } from "@/types";
 import { User } from "firebase/auth";
 import { DocumentReference, doc } from "firebase/firestore";
-import { View, StyleSheet, Image, ToastAndroid } from "react-native";
+import { View, StyleSheet, Image } from "react-native";
 import { ActivityIndicator, Button, Surface, Text } from "react-native-paper";
 import { useFirestore, useFirestoreDocData, useUser } from "reactfire";
 import QRCode from "react-native-qrcode-svg";
 import { useAppTheme } from "@/lib/Material3ThemeProvider";
 import { useState } from "react";
+import { router } from "expo-router";
 
 export default function IndexScreen() {
   const { status: userStatus, data: user } = useUser();
@@ -60,7 +61,7 @@ function Home({ user }: { user: User }) {
         <Surface style={styles.walletCard}>
           <View>
             <Text variant="headlineLarge">
-              {userData.balance.toLocaleString("en-US", {
+              {userData.balance.toLocaleString("en-PH", {
                 style: "currency",
                 currency: "PHP",
               })}
@@ -85,7 +86,7 @@ function Home({ user }: { user: User }) {
               icon="qrcode-scan"
               contentStyle={{ height: 50 }}
               onPress={() => {
-                ToastAndroid.show("Coming soon!", ToastAndroid.SHORT);
+                router.push("/scan");
               }}
             >
               Send

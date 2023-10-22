@@ -20,6 +20,9 @@ dependencies:
   expo:
     specifier: ~49.0.16
     version: 49.0.16(@babel/core@7.23.2)
+  expo-barcode-scanner:
+    specifier: ~12.5.3
+    version: 12.5.3(expo@49.0.16)
   expo-constants:
     specifier: ~14.4.2
     version: 14.4.2(expo@49.0.16)
@@ -4334,6 +4337,15 @@ packages:
     transitivePeerDependencies:
       - expo
       - supports-color
+    dev: false
+
+  /expo-barcode-scanner@12.5.3(expo@49.0.16):
+    resolution: {integrity: sha512-aIeTiOUzPdngTIhZHhM1mOMx9CPtmYEtEkK8pAgyua3NiAKgsUN8z8bpiQWuZTrxSaqkU8fG1zGOk9E4VnNwyA==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 49.0.16(@babel/core@7.23.2)
+      expo-image-loader: 4.3.0(expo@49.0.16)
     dev: false
 
   /expo-constants@14.4.2(expo@49.0.16):

@@ -15,6 +15,7 @@ import { Stack } from "expo-router";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MaterialNavBar from "@/components/material-nav-bar";
+import { FirebaseError } from "firebase/app";
 
 GoogleSignin.configure({
   webClientId:
@@ -50,12 +51,20 @@ export function FirebaseProviders({ children }: { children: React.ReactNode }) {
   }
 
   if (__DEV__) {
-    connectFirestoreEmulator(firestore, "localhost", 8080);
-    connectStorageEmulator(storage, "localhost", 9199);
-    // https://github.com/firebase/firebase-js-sdk/issues/6824
-    // @ts-ignore
-    if (!auth.config.emulator) {
-      connectAuthEmulator(auth, "http://localhost:9099");
+    try {
+      connectFirestoreEmulator(firestore, "localhost", 8080);
+      connectStorageEmulator(storage, "localhost", 9199);
+      // https://github.com/firebase/firebase-js-sdk/issues/6824
+      // @ts-ignore
+      if (!auth.config.emulator) {
+        connectAuthEmulator(auth, "http://localhost:9099");
+      }
+    } catch (e) {
+      if (e instanceof FirebaseError && e.code === "failed-precondition") {
+        // Suppress error
+      } else {
+        throw e;
+      }
     }
   }
 
@@ -85,6 +94,16 @@ export default function RootLayout() {
               options={{
                 headerTitle: "Settings",
                 headerShown: true,
+              }}
+            />
+            <Stack.Screen
+              name="scan"
+              options={{
+                headerTitle: "Scan QR",
+                headerShown: true,
+                header: (props) => (
+                  <MaterialNavBar {...props} elevated={true} />
+                ),
               }}
             />
           </Stack>
