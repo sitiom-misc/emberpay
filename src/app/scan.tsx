@@ -18,16 +18,20 @@ import {
 import { BarCodeScanner } from "expo-barcode-scanner";
 import { useAuth, useFirestore } from "reactfire";
 import {
+  CollectionReference,
   DocumentReference,
   DocumentSnapshot,
+  collection,
   doc,
   getDoc,
+  serverTimestamp,
 } from "firebase/firestore";
-import { User } from "@/types";
+import { Transaction, User } from "@/types";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { runTransaction } from "firebase/firestore";
+import { router } from "expo-router";
 
 const AmountSchema = z.object({
   amount: z.coerce
@@ -153,6 +157,16 @@ export default function ScanScreen() {
                   "users",
                   receiver.id
                 ) as DocumentReference<User>;
+                const receiverDoc = await getDoc(receiverDocRef);
+                if (!receiverDoc.exists()) {
+                  throw "Document does not exist!";
+                }
+                const transactionRef = doc(
+                  collection(
+                    firestore,
+                    "transactions"
+                  ) as CollectionReference<Transaction>
+                );
                 try {
                   await runTransaction(firestore, async (transaction) => {
                     const senderDoc = await transaction.get(senderDocRef);
@@ -166,14 +180,28 @@ export default function ScanScreen() {
                     transaction.update(receiverDocRef, {
                       balance: receiverDoc.data()?.balance + amount,
                     });
+                    transaction.set(transactionRef, {
+                      amount,
+                      date: serverTimestamp(),
+                      senderId: currentUser.uid,
+                      receiverId: receiver.id,
+                    });
                   });
                 } catch (e) {
                   if (e instanceof Error) {
                     ToastAndroid.show(e.message, ToastAndroid.SHORT);
                   }
                 }
+                ToastAndroid.show(
+                  `Successfully sent ${amount.toLocaleString("en-PH", {
+                    style: "currency",
+                    currency: "PHP",
+                  })} to ${receiverDoc.data().name}!`,
+                  ToastAndroid.SHORT
+                );
                 reset();
                 setScanned(false);
+                router.back();
               })}
               disabled={isSubmitting}
             >
