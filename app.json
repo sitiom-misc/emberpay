@@ -12,6 +12,7 @@
       "supportsTablet": true
     },
     "splash": {
+      "backgroundColor": "#1f1a16",
       "image": "./src/assets/images/splash.png"
     },
     "android": {
